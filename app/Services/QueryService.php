@@ -12,6 +12,12 @@ class QueryService
 {
     private $cepArray;
     private $cepList = [];
+    private $messageService;
+
+    public function __construct(MessageService $messageService)
+    {
+        $this->messageService = $messageService;
+    }
 
     /**
      * @param $string
@@ -25,10 +31,7 @@ class QueryService
         for ($i = 0; $i < $count; $i++) {
             $cep = $this->clearString($this->cepArray[$count - $i - 1]);
             if (strlen($cep) < 8 || strlen($cep) > 8) {
-                $cepArray = [
-                    'cep' => $cep,
-                    'erro' => Response::HTTP_NOT_FOUND
-                ];;
+                $cepArray = $this->messageService->badRequest($cep);
             } else {
                 $cepArray = $this->getData($cep);
             }
@@ -46,10 +49,7 @@ class QueryService
     {
         $cep = Http::get("https://viacep.com.br/ws/{$data}/json/")->json();
         if (Arr::exists($cep, 'erro')) {
-            $cep = [
-                'cep' => $cep,
-                'erro' => Response::HTTP_BAD_REQUEST
-            ];;
+            $cep = $this->messageService->notFound($cep);
         }
         return $cep;
     }
