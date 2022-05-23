@@ -31,12 +31,12 @@ class QueryService
         $i = 0;
         while ($i < $count) {
             $i++;
-            $cep = $this->clearString($this->cepArray[$count - $i]);
-            if ($this->verifyString($cep) == true) {
-                $this->sendToList($this->getData($cep));
+            $cep = $this->clear($this->cepArray[$count - $i]);
+            if ($this->verify($cep) == true) {
+                $this->setToList($this->getData($cep));
             }
         }
-        return response()->json($this->cepList, Response::HTTP_OK, ['Content-Type' => 'application/json;charset=UTF-8', 'Charset' => 'utf-8'], JSON_PRETTY_PRINT);
+        return $this->jsonResponse($this->cepList);
     }
 
     /**
@@ -45,7 +45,7 @@ class QueryService
      */
     public function getData($data): array
     {
-        $cep = Http::get("https://viacep.com.br/ws/{$data}/json/")->json();
+        $cep = Http::get("https://viacep.com.br/ws/$data/json/")->json();
         if (Arr::exists($cep, 'erro')) {
             $cep = $this->messageService->notFound($cep);
         }
@@ -65,7 +65,7 @@ class QueryService
      * @param $string
      * @return string
      */
-    public function clearString($string): string
+    public function clear($string): string
     {
         return preg_replace("/[^0-9]/", "", $string);
     }
@@ -74,9 +74,9 @@ class QueryService
      * @param $string
      * @return bool
      */
-    public function verifyString($string): bool
+    public function verify($string): bool
     {
-        if ($this->isEmpty($string)){
+        if ($this->isEmpty($string)) {
             return false;
         }
         $cepArray = $this->cepList;
@@ -84,13 +84,13 @@ class QueryService
             $this->cepList = [];
         } else {
             foreach ($cepArray as $array) {
-                $cep = $this->clearString($array['cep']);
+                $cep = $this->clear($array['cep']);
                 if ($cep == $string) {
                     return false;
                 }
             }
         }
-        return $this->isValidCEP($string);
+        return $this->isValid($string);
     }
 
     /**
@@ -109,10 +109,10 @@ class QueryService
      * @param $string
      * @return bool
      */
-    public function isValidCEP($string): bool
+    public function isValid($string): bool
     {
         if (strlen($string) < 8 || strlen($string) > 8) {
-            $this->sendToList($this->messageService->badRequest($string));
+            $this->setToList($this->messageService->badRequest($string));
             return false;
         }
         return true;
@@ -121,8 +121,17 @@ class QueryService
     /**
      * @param $string
      */
-    public function sendToList($string)
+    public function setToList($string)
     {
         array_push($this->cepList, $string);
+    }
+
+    /**
+     * @param $data
+     * @return JsonResponse
+     */
+    public function jsonResponse($data): JsonResponse
+    {
+        return response()->json($data, Response::HTTP_OK, ['Content-Type' => 'application/json', 'Charset' => 'utf-8'], JSON_UNESCAPED_UNICODE);
     }
 }
