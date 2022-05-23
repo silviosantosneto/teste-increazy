@@ -43,7 +43,7 @@ class QueryService
      * @param  $data
      * @return array
      */
-    public function getData($data): array
+    private function getData($data): array
     {
         $cep = Http::get("https://viacep.com.br/ws/$data/json/")->json();
         if (Arr::exists($cep, 'erro')) {
@@ -56,7 +56,7 @@ class QueryService
      * @param $string
      * @param $delimiter
      */
-    public function convertStringToArray($string, $delimiter)
+    private function convertStringToArray($string, $delimiter)
     {
         $this->cepArray = Str::of($string)->explode($delimiter);
     }
@@ -65,7 +65,7 @@ class QueryService
      * @param $string
      * @return string
      */
-    public function clear($string): string
+    private function clear($string): string
     {
         return preg_replace("/[^0-9]/", "", $string);
     }
@@ -74,7 +74,7 @@ class QueryService
      * @param $string
      * @return bool
      */
-    public function verify($string): bool
+    private function verify($string): bool
     {
         if ($this->isEmpty($string)) {
             return false;
@@ -97,7 +97,7 @@ class QueryService
      * @param $string
      * @return bool
      */
-    public function isEmpty($string): bool
+    private function isEmpty($string): bool
     {
         if ($string == '') {
             return true;
@@ -109,7 +109,7 @@ class QueryService
      * @param $string
      * @return bool
      */
-    public function isValid($string): bool
+    private function isValid($string): bool
     {
         if (strlen($string) < 8 || strlen($string) > 8) {
             $this->setToList($this->messageService->badRequest($string));
@@ -121,7 +121,7 @@ class QueryService
     /**
      * @param $string
      */
-    public function setToList($string)
+    private function setToList($string)
     {
         array_push($this->cepList, $string);
     }
@@ -130,7 +130,7 @@ class QueryService
      * @param $data
      * @return JsonResponse
      */
-    public function jsonResponse($data): JsonResponse
+    private function jsonResponse($data): JsonResponse
     {
         return response()->json($data, Response::HTTP_OK, ['Content-Type' => 'application/json', 'Charset' => 'utf-8'], JSON_UNESCAPED_UNICODE);
     }
