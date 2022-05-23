@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 class QueryService
 {
     private $cepArray;
-    private $cepList = [];
+    private $cepList;
     private $messageService;
 
     public function __construct(MessageService $messageService)
@@ -28,16 +28,14 @@ class QueryService
     {
         $this->convertStringToArray($string, ',');
         $count = count($this->cepArray);
-        for ($i = 0; $i < $count; $i++) {
-            $cep = $this->clearString($this->cepArray[$count - $i - 1]);
-            if (strlen($cep) < 8 || strlen($cep) > 8) {
-                $cepArray = $this->messageService->badRequest($cep);
-            } else {
-                $cepArray = $this->getData($cep);
+        $i = 0;
+        while ($i < $count) {
+            $i++;
+            $cep = $this->clearString($this->cepArray[$count - $i]);
+            if ($this->verifyString($cep) == true){
+                $this->sendToList($this->getData($cep));
             }
-            $this->sendToList($cepArray);
         }
-
         return response()->json($this->cepList, Response::HTTP_OK, ['Content-Type' => 'application/json;charset=UTF-8', 'Charset' => 'utf-8'], JSON_PRETTY_PRINT);
     }
 
@@ -70,6 +68,30 @@ class QueryService
     public function clearString($string): string
     {
         return preg_replace("/[^0-9]/", "", $string);
+    }
+
+    /**
+     * @param $string
+     * @return bool
+     */
+    public function verifyString($string): bool
+    {
+        $cepArray = $this->cepList;
+        if (!Arr::accessible($this->cepList)) {
+            $this->cepList = [];
+        } else {
+            foreach ($cepArray as $array) {
+                $cep = $this->clearString($array['cep']);
+                if ($cep == $string){
+                    return false;
+                }
+            }
+        }
+        if (strlen($string) < 8 || strlen($string) > 8) {
+            $this->sendToList($this->messageService->badRequest($string));
+            return false;
+        }
+        return true;
     }
 
     /**
