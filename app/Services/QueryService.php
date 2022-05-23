@@ -26,7 +26,7 @@ class QueryService
 
     public function get($string): JsonResponse
     {
-        $this->convertStringToArray($string, ',');
+        $this->convertStringToArray($string);
         $count = count($this->cepArray);
         $i = 0;
         while ($i < $count) {
@@ -54,11 +54,10 @@ class QueryService
 
     /**
      * @param $string
-     * @param $delimiter
      */
-    private function convertStringToArray($string, $delimiter)
+    private function convertStringToArray($string)
     {
-        $this->cepArray = Str::of($string)->explode($delimiter);
+        $this->cepArray = Str::of($string)->explode(',');
     }
 
     /**
