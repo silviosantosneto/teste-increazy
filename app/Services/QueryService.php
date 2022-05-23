@@ -87,11 +87,6 @@ class QueryService
                 }
             }
         }
-        return $this->isValidCEP($string);
-    }
-
-    public function isValidCEP($string)
-    {
         if (strlen($string) < 8 || strlen($string) > 8) {
             $this->sendToList($this->messageService->badRequest($string));
             return false;
