@@ -2,6 +2,6 @@
 
 <aside>
 
-➡️ API para consultar de vários CEPs em um so request no ViaCEP
+➡️ API de consulta de CEPs
 
 </aside>
