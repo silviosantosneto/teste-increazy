@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Address;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
@@ -12,11 +13,13 @@ class QueryService
 {
     private $cepArray;
     private $cepList;
+    private $cepObject;
     private $messageService;
 
-    public function __construct(MessageService $messageService)
+    public function __construct(MessageService $messageService, Address $cepObject)
     {
         $this->messageService = $messageService;
+        $this->cepObject = $cepObject;
     }
 
     /**
@@ -33,7 +36,7 @@ class QueryService
             $i++;
             $cep = $this->clear($this->cepArray[$count - $i]);
             if ($this->verify($cep) == true) {
-                $this->setToList($this->getData($cep));
+                $this->getData($this->format($cep));
             }
         }
         return $this->jsonResponse($this->cepList);
@@ -41,15 +44,20 @@ class QueryService
 
     /**
      * @param  $data
-     * @return array
      */
-    private function getData($data): array
+    private function getData($data)
     {
-        $cep = Http::get("https://viacep.com.br/ws/$data/json/")->json();
-        if (Arr::exists($cep, 'erro')) {
-            $cep = $this->messageService->notFound($cep);
+        if (Address::where('cep', '=', $data)->exists()) {
+            $cep = Address::where('cep', '=', $data)->first();
+            $cep = $cep->toArray();
+        } else {
+            $cep = Http::get("https://viacep.com.br/ws/$data/json/")->json();
+            if (Arr::exists($cep, 'erro')) {
+                $cep = $this->messageService->notFound($cep);
+            }
+            $this->cepObject->fill($cep)->save();
         }
-        return $cep;
+        $this->fillList($cep);
     }
 
     /**
@@ -67,6 +75,16 @@ class QueryService
     private function clear($string): string
     {
         return preg_replace("/[^0-9]/", "", $string);
+
+    }
+
+    /**
+     * @param $data
+     * @return string
+     */
+    private function format($data): string
+    {
+        return substr_replace($data,'-', 5, 0);
     }
 
     /**
@@ -111,7 +129,7 @@ class QueryService
     private function isValid($string): bool
     {
         if (strlen($string) < 8 || strlen($string) > 8) {
-            $this->setToList($this->messageService->badRequest($string));
+            $this->fillList($this->messageService->badRequest($string));
             return false;
         }
         return true;
@@ -120,7 +138,7 @@ class QueryService
     /**
      * @param $string
      */
-    private function setToList($string)
+    private function fillList($string)
     {
         array_push($this->cepList, $string);
     }
