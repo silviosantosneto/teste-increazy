@@ -4,7 +4,7 @@
 
 <aside>
 
-➡️ [Consulta normal](https://github.com/silviosantosneto/teste-increazy/tree/master)
+➡️ [Consulta direta](https://github.com/silviosantosneto/teste-increazy/tree/master)
 
 </aside>
 
